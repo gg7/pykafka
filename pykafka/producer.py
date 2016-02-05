@@ -20,6 +20,7 @@ limitations under the License.
 __all__ = ["Producer"]
 from collections import deque
 import logging
+import six
 import sys
 import threading
 import traceback
@@ -157,7 +158,7 @@ class Producer(object):
     def _raise_worker_exceptions(self):
         """Raises exceptions encountered on worker threads"""
         if self._worker_exception is not None:
-            _, ex, tb = self._worker_exception
+            ex_type, ex, tb = self._worker_exception
             # avoid logging worker exceptions more than once, which can
             # happen when this function's `raise` triggers `__exit__`
             # which calls `stop`
@@ -165,7 +166,7 @@ class Producer(object):
                 self._worker_trace_logged = True
                 log.error("Exception encountered in worker thread:\n%s",
                           "".join(traceback.format_tb(tb)))
-            raise ex
+            six.reraise(ex_type, ex, tb)
 
     def __repr__(self):
         return "<{module}.{name} at {id_}>".format(
